@@ -116,6 +116,18 @@ module Qo
     #     Any -> Any -> Bool # Matches against wildcard or a key and value. Coerces key to_s if no matches for JSON.
     private def hash_against_hash_matcher(match_target)
       -> match_key, match_value {
+        puts(
+          "match_key:    #{match_key}",
+          "match_value:  #{match_value}",
+          "match_target: #{match_target}"
+        )
+
+        if match_value.is_a?(Hash) && match_target.is_a?(Hash)
+          return false unless match_target.key?(match_key)
+
+          return match_against_hash(match_value)[match_target[match_key]]
+        end
+
         match_target.key?(match_key) &&
         wildcard_match(match_value) ||
         case_match(match_target[match_key], match_value)  ||

@@ -6,9 +6,11 @@ module Qo
   WILDCARD_MATCH = :*
 
   class << self
-    def m(*array_matchers, **keyword_matchers, &fn)
+    def matcher(*array_matchers, **keyword_matchers, &fn)
       Qo::GuardBlockMatcher.new(*array_matchers, **keyword_matchers, &fn)
     end
+
+    alias_method :m, :matcher
 
     def match(data, *qo_matchers)
       all_are_guards = qo_matchers.all? { |q| q.is_a?(Qo::GuardBlockMatcher)}
@@ -20,6 +22,15 @@ module Qo
       }
     end
 
+    def dig(path_map, expected_value)
+      -> hash {
+        segments = path_map.split('.')
+
+        expected_value === hash.dig(*segments) ||
+        expected_value === hash.dig(*segments.map(&:to_sym))
+      }
+    end
+
     def match_fn(*qo_matchers)
       -> data { match(data, *qo_matchers) }
     end
@@ -28,9 +39,7 @@ module Qo
       Qo::Matcher.new('and', *array_matchers, **keyword_matchers)
     end
 
-    def [](*array_matchers, **keyword_matchers)
-      Qo::Matcher.new('and', *array_matchers, **keyword_matchers)
-    end
+    alias_method :[], :and
 
     def or(*array_matchers, **keyword_matchers)
       Qo::Matcher.new('or', *array_matchers, **keyword_matchers)
